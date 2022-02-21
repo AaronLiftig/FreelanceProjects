@@ -1,12 +1,11 @@
 Option Explicit
 
 Sub ReadAndFormatData()
-
     'Declare variables
     Dim dataSheet, resultSheet As Worksheet
     Dim i, n, a, b, currentResultRow, dataNumRows As Integer
     Dim previousJobNumber, currentJobNumber As String
-    Dim uniqueNames, NewArr As Variant
+    Dim uniqueNames, newUniqueNames As Variant
     
     Set dataSheet = Sheets("Data")
     Set resultSheet = Sheets("End Result")
@@ -129,66 +128,77 @@ Sub ReadAndFormatData()
     'Populate unique employee names and SUMIFS formulas
     uniqueNames = WorksheetFunction.Unique(resultSheet.Range("E7:E" & CStr(currentResultRow - 1)))
     
-    ReDim NewArr(LBound(uniqueNames) To UBound(uniqueNames))
+    ReDim newUniqueNames(LBound(uniqueNames) To UBound(uniqueNames))
     For a = LBound(uniqueNames) To UBound(uniqueNames)
         If uniqueNames(a, 1) <> "" Then
             b = b + 1
-            NewArr(b) = uniqueNames(a, 1)
+            newUniqueNames(b) = uniqueNames(a, 1)
         End If
     Next a
-    ReDim Preserve NewArr(LBound(uniqueNames) To b)
+    ReDim Preserve newUniqueNames(LBound(uniqueNames) To b)
     
-    For n = LBound(NewArr) To UBound(NewArr)
-        resultSheet.Cells(currentResultRow + 9 + n - 1, 5) = NewArr(n)
+    For n = LBound(newUniqueNames) To UBound(newUniqueNames)
+        resultSheet.Cells(currentResultRow + 9 + n - 1, 5) = newUniqueNames(n)
         resultSheet.Cells(currentResultRow + 9 + n - 1, 7).Formula = _
                 "=SUMIFS(G$7:G$" & CStr(currentResultRow - 1) & ",$E$7:$E$" & CStr(currentResultRow - 1) & ",$E" & CStr(currentResultRow + 9 + n - 1) & ")"
+        resultSheet.Cells(currentResultRow + 9 + n - 1, 8) = _
+                WorksheetFunction.Index(Range("H$7:H$" & CStr(currentResultRow - 1)), WorksheetFunction.Match(newUniqueNames(n), Range("$E$7:$E$" & CStr(currentResultRow - 1)), 0))
         resultSheet.Cells(currentResultRow + 9 + n - 1, 9).Formula = _
                 "=SUMIFS(I$7:I$" & CStr(currentResultRow - 1) & ",$E$7:$E$" & CStr(currentResultRow - 1) & ",$E" & CStr(currentResultRow + 9 + n - 1) & ")/$H" & CStr(currentResultRow + 9 + n - 1)
         resultSheet.Cells(currentResultRow + 9 + n - 1, 10).Formula = _
                 "=SUMIFS(J$7:J$" & CStr(currentResultRow - 1) & ",$E$7:$E$" & CStr(currentResultRow - 1) & ",$E" & CStr(currentResultRow + 9 + n - 1) & ")/$H" & CStr(currentResultRow + 9 + n - 1)
     Next n
     
-    resultSheet.Cells(currentResultRow + 9 + UBound(NewArr), 7).Formula = "=SUM(G" & CStr(currentResultRow + 9 + LBound(NewArr) - 1) & ":G" & CStr(currentResultRow + 9 + UBound(NewArr) - 1) & ")"
-    resultSheet.Cells(currentResultRow + 9 + UBound(NewArr), 9).Formula = "=SUM(I" & CStr(currentResultRow + 9 + LBound(NewArr) - 1) & ":I" & CStr(currentResultRow + 9 + UBound(NewArr) - 1) & ")"
-    resultSheet.Cells(currentResultRow + 9 + UBound(NewArr), 10).Formula = "=SUM(J" & CStr(currentResultRow + 9 + LBound(NewArr) - 1) & ":J" & CStr(currentResultRow + 9 + UBound(NewArr) - 1) & ")"
+    'Sort employees by rate
+    Range("E" & CStr(currentResultRow + 8) & ":M" & CStr(currentResultRow + 9 + UBound(newUniqueNames))).Sort Key1:=Range("H" & CStr(currentResultRow + 8)), _
+                                                                                                            Order1:=xlDescending, _
+                                                                                                            Header:=xlYes
+            
+    resultSheet.Cells(currentResultRow + 9 + UBound(newUniqueNames), 7).Formula = "=SUM(G" & CStr(currentResultRow + 9 + LBound(newUniqueNames) - 1) & ":G" & CStr(currentResultRow + 9 + UBound(newUniqueNames) - 1) & ")"
+    resultSheet.Cells(currentResultRow + 9 + UBound(newUniqueNames), 9).Formula = "=SUM(I" & CStr(currentResultRow + 9 + LBound(newUniqueNames) - 1) & ":I" & CStr(currentResultRow + 9 + UBound(newUniqueNames) - 1) & ")"
+    resultSheet.Cells(currentResultRow + 9 + UBound(newUniqueNames), 10).Formula = "=SUM(J" & CStr(currentResultRow + 9 + LBound(newUniqueNames) - 1) & ":J" & CStr(currentResultRow + 9 + UBound(newUniqueNames) - 1) & ")"
     
-    resultSheet.Cells(currentResultRow + 9 + UBound(NewArr), 7).Borders(xlEdgeBottom).LineStyle = xlDouble
-    resultSheet.Cells(currentResultRow + 9 + UBound(NewArr), 7).Borders(xlEdgeTop).LineStyle = xlContinuous
-    resultSheet.Cells(currentResultRow + 9 + UBound(NewArr), 7).Borders(xlEdgeBottom).ColorIndex = 5
-    resultSheet.Cells(currentResultRow + 9 + UBound(NewArr), 7).Borders(xlEdgeTop).ColorIndex = 5
+    resultSheet.Cells(currentResultRow + 9 + UBound(newUniqueNames), 7).Borders(xlEdgeBottom).LineStyle = xlDouble
+    resultSheet.Cells(currentResultRow + 9 + UBound(newUniqueNames), 7).Borders(xlEdgeTop).LineStyle = xlContinuous
+    resultSheet.Cells(currentResultRow + 9 + UBound(newUniqueNames), 7).Borders(xlEdgeBottom).ColorIndex = 5
+    resultSheet.Cells(currentResultRow + 9 + UBound(newUniqueNames), 7).Borders(xlEdgeTop).ColorIndex = 5
     
-    resultSheet.Cells(currentResultRow + 9 + UBound(NewArr), 9).Borders(xlEdgeBottom).LineStyle = xlDouble
-    resultSheet.Cells(currentResultRow + 9 + UBound(NewArr), 9).Borders(xlEdgeTop).LineStyle = xlContinuous
-    resultSheet.Cells(currentResultRow + 9 + UBound(NewArr), 9).Borders(xlEdgeBottom).ColorIndex = 5
-    resultSheet.Cells(currentResultRow + 9 + UBound(NewArr), 9).Borders(xlEdgeTop).ColorIndex = 5
+    resultSheet.Cells(currentResultRow + 9 + UBound(newUniqueNames), 9).Borders(xlEdgeBottom).LineStyle = xlDouble
+    resultSheet.Cells(currentResultRow + 9 + UBound(newUniqueNames), 9).Borders(xlEdgeTop).LineStyle = xlContinuous
+    resultSheet.Cells(currentResultRow + 9 + UBound(newUniqueNames), 9).Borders(xlEdgeBottom).ColorIndex = 5
+    resultSheet.Cells(currentResultRow + 9 + UBound(newUniqueNames), 9).Borders(xlEdgeTop).ColorIndex = 5
     
-    resultSheet.Cells(currentResultRow + 9 + UBound(NewArr), 10).Borders(xlEdgeBottom).LineStyle = xlDouble
-    resultSheet.Cells(currentResultRow + 9 + UBound(NewArr), 10).Borders(xlEdgeTop).LineStyle = xlContinuous
-    resultSheet.Cells(currentResultRow + 9 + UBound(NewArr), 10).Borders(xlEdgeBottom).ColorIndex = 5
-    resultSheet.Cells(currentResultRow + 9 + UBound(NewArr), 10).Borders(xlEdgeTop).ColorIndex = 5
+    resultSheet.Cells(currentResultRow + 9 + UBound(newUniqueNames), 10).Borders(xlEdgeBottom).LineStyle = xlDouble
+    resultSheet.Cells(currentResultRow + 9 + UBound(newUniqueNames), 10).Borders(xlEdgeTop).LineStyle = xlContinuous
+    resultSheet.Cells(currentResultRow + 9 + UBound(newUniqueNames), 10).Borders(xlEdgeBottom).ColorIndex = 5
+    resultSheet.Cells(currentResultRow + 9 + UBound(newUniqueNames), 10).Borders(xlEdgeTop).ColorIndex = 5
     
     'Populate employee positions SUMIFS formulas
-    resultSheet.Cells(currentResultRow + 9 + UBound(NewArr) + 3, 5) = "Managing Director"
-    resultSheet.Cells(currentResultRow + 9 + UBound(NewArr) + 4, 5) = "Director"
-    resultSheet.Cells(currentResultRow + 9 + UBound(NewArr) + 5, 5) = "Senior Manager"
-    resultSheet.Cells(currentResultRow + 9 + UBound(NewArr) + 6, 5) = "Manager"
-    resultSheet.Cells(currentResultRow + 9 + UBound(NewArr) + 7, 5) = "Senior Associate"
-    resultSheet.Cells(currentResultRow + 9 + UBound(NewArr) + 8, 5) = "Associate"
-    resultSheet.Cells(currentResultRow + 9 + UBound(NewArr) + 9, 5) = "Intern"
+    resultSheet.Cells(currentResultRow + 9 + UBound(newUniqueNames) + 3, 5) = "Managing Director"
+    resultSheet.Cells(currentResultRow + 9 + UBound(newUniqueNames) + 4, 5) = "Director"
+    resultSheet.Cells(currentResultRow + 9 + UBound(newUniqueNames) + 5, 5) = "Senior Manager"
+    resultSheet.Cells(currentResultRow + 9 + UBound(newUniqueNames) + 6, 5) = "Manager"
+    resultSheet.Cells(currentResultRow + 9 + UBound(newUniqueNames) + 7, 5) = "Senior Associate"
+    resultSheet.Cells(currentResultRow + 9 + UBound(newUniqueNames) + 8, 5) = "Associate"
+    resultSheet.Cells(currentResultRow + 9 + UBound(newUniqueNames) + 9, 5) = "Intern"
 
-    resultSheet.Cells(currentResultRow + 9 + UBound(NewArr) + 10, 7).Borders(xlEdgeBottom).LineStyle = xlDouble
-    resultSheet.Cells(currentResultRow + 9 + UBound(NewArr) + 10, 7).Borders(xlEdgeTop).LineStyle = xlContinuous
-    resultSheet.Cells(currentResultRow + 9 + UBound(NewArr) + 10, 7).Borders(xlEdgeBottom).ColorIndex = 5
-    resultSheet.Cells(currentResultRow + 9 + UBound(NewArr) + 10, 7).Borders(xlEdgeTop).ColorIndex = 5
+    resultSheet.Cells(currentResultRow + 9 + UBound(newUniqueNames) + 10, 7).Borders(xlEdgeBottom).LineStyle = xlDouble
+    resultSheet.Cells(currentResultRow + 9 + UBound(newUniqueNames) + 10, 7).Borders(xlEdgeTop).LineStyle = xlContinuous
+    resultSheet.Cells(currentResultRow + 9 + UBound(newUniqueNames) + 10, 7).Borders(xlEdgeBottom).ColorIndex = 5
+    resultSheet.Cells(currentResultRow + 9 + UBound(newUniqueNames) + 10, 7).Borders(xlEdgeTop).ColorIndex = 5
     
-    resultSheet.Cells(currentResultRow + 9 + UBound(NewArr) + 10, 9).Borders(xlEdgeBottom).LineStyle = xlDouble
-    resultSheet.Cells(currentResultRow + 9 + UBound(NewArr) + 10, 9).Borders(xlEdgeTop).LineStyle = xlContinuous
-    resultSheet.Cells(currentResultRow + 9 + UBound(NewArr) + 10, 9).Borders(xlEdgeBottom).ColorIndex = 5
-    resultSheet.Cells(currentResultRow + 9 + UBound(NewArr) + 10, 9).Borders(xlEdgeTop).ColorIndex = 5
+    resultSheet.Cells(currentResultRow + 9 + UBound(newUniqueNames) + 10, 9).Borders(xlEdgeBottom).LineStyle = xlDouble
+    resultSheet.Cells(currentResultRow + 9 + UBound(newUniqueNames) + 10, 9).Borders(xlEdgeTop).LineStyle = xlContinuous
+    resultSheet.Cells(currentResultRow + 9 + UBound(newUniqueNames) + 10, 9).Borders(xlEdgeBottom).ColorIndex = 5
+    resultSheet.Cells(currentResultRow + 9 + UBound(newUniqueNames) + 10, 9).Borders(xlEdgeTop).ColorIndex = 5
     
-    resultSheet.Cells(currentResultRow + 9 + UBound(NewArr) + 10, 10).Borders(xlEdgeBottom).LineStyle = xlDouble
-    resultSheet.Cells(currentResultRow + 9 + UBound(NewArr) + 10, 10).Borders(xlEdgeTop).LineStyle = xlContinuous
-    resultSheet.Cells(currentResultRow + 9 + UBound(NewArr) + 10, 10).Borders(xlEdgeBottom).ColorIndex = 5
-    resultSheet.Cells(currentResultRow + 9 + UBound(NewArr) + 10, 10).Borders(xlEdgeTop).ColorIndex = 5
-
+    resultSheet.Cells(currentResultRow + 9 + UBound(newUniqueNames) + 10, 10).Borders(xlEdgeBottom).LineStyle = xlDouble
+    resultSheet.Cells(currentResultRow + 9 + UBound(newUniqueNames) + 10, 10).Borders(xlEdgeTop).LineStyle = xlContinuous
+    resultSheet.Cells(currentResultRow + 9 + UBound(newUniqueNames) + 10, 10).Borders(xlEdgeBottom).ColorIndex = 5
+    resultSheet.Cells(currentResultRow + 9 + UBound(newUniqueNames) + 10, 10).Borders(xlEdgeTop).ColorIndex = 5
+    
+    'Format numeric columns
+    resultSheet.Range("G7:J" & CStr(currentResultRow + 9 + UBound(newUniqueNames) + 10)).NumberFormat = "#,##0.00"
+    resultSheet.Range("L7:M" & CStr(currentResultRow + 9 + UBound(newUniqueNames) + 10)).NumberFormat = "#,##0.00"
+    
 End Sub

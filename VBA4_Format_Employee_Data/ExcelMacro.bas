@@ -142,7 +142,7 @@ Sub ReadAndFormatData()
         resultSheet.Cells(currentResultRow + 9 + n - 1, 7).Formula = _
                 "=SUMIFS(G$7:G$" & CStr(currentResultRow - 1) & ",$E$7:$E$" & CStr(currentResultRow - 1) & ",$E" & CStr(currentResultRow + 9 + n - 1) & ")"
         resultSheet.Cells(currentResultRow + 9 + n - 1, 8) = _
-                WorksheetFunction.Index(Range("H$7:H$" & CStr(currentResultRow - 1)), WorksheetFunction.Match(newUniqueNames(n), Range("$E$7:$E$" & CStr(currentResultRow - 1)), 0))
+                WorksheetFunction.Index(resultSheet.Range("H$7:H$" & CStr(currentResultRow - 1)), WorksheetFunction.Match(newUniqueNames(n), resultSheet.Range("$E$7:$E$" & CStr(currentResultRow - 1)), 0))
         resultSheet.Cells(currentResultRow + 9 + n - 1, 9).Formula = _
                 "=SUMIFS(I$7:I$" & CStr(currentResultRow - 1) & ",$E$7:$E$" & CStr(currentResultRow - 1) & ",$E" & CStr(currentResultRow + 9 + n - 1) & ")/$H" & CStr(currentResultRow + 9 + n - 1)
         resultSheet.Cells(currentResultRow + 9 + n - 1, 10).Formula = _
@@ -150,10 +150,10 @@ Sub ReadAndFormatData()
     Next n
     
     'Sort employees by rate
-    Range("E" & CStr(currentResultRow + 8) & ":M" & CStr(currentResultRow + 9 + UBound(newUniqueNames))).Sort Key1:=Range("H" & CStr(currentResultRow + 8)), _
-                                                                                                            Order1:=xlDescending, _
-                                                                                                            Header:=xlYes
-            
+    resultSheet.Range("E" & CStr(currentResultRow + 8) & ":M" & CStr(currentResultRow + 9 + UBound(newUniqueNames))).Sort Key1:=resultSheet.Range("H" & CStr(currentResultRow + 8)), _
+                                                                                                                        Order1:=xlDescending, _
+                                                                                                                        Header:=xlYes
+                        
     resultSheet.Cells(currentResultRow + 9 + UBound(newUniqueNames), 7).Formula = "=SUM(G" & CStr(currentResultRow + 9 + LBound(newUniqueNames) - 1) & ":G" & CStr(currentResultRow + 9 + UBound(newUniqueNames) - 1) & ")"
     resultSheet.Cells(currentResultRow + 9 + UBound(newUniqueNames), 9).Formula = "=SUM(I" & CStr(currentResultRow + 9 + LBound(newUniqueNames) - 1) & ":I" & CStr(currentResultRow + 9 + UBound(newUniqueNames) - 1) & ")"
     resultSheet.Cells(currentResultRow + 9 + UBound(newUniqueNames), 10).Formula = "=SUM(J" & CStr(currentResultRow + 9 + LBound(newUniqueNames) - 1) & ":J" & CStr(currentResultRow + 9 + UBound(newUniqueNames) - 1) & ")"

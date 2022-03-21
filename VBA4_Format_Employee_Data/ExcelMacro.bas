@@ -1,9 +1,10 @@
 Option Explicit
 
 Sub ReadAndFormatData()
+
     'Declare variables
     Dim dataSheet, resultSheet As Worksheet
-    Dim i, n, a, b, currentResultRow, dataNumRows As Integer
+    Dim i, n, a, b, currentResultRow, dataNumRows, numberOfGreyRows As Integer
     Dim previousJobNumber, currentJobNumber As String
     Dim uniqueNames, newUniqueNames As Variant
     
@@ -15,14 +16,14 @@ Sub ReadAndFormatData()
     resultSheet.Cells.Font.Size = 10
     
     'Create header
-    resultSheet.Cells(5, 1) = "NEW JOB Number"
-    resultSheet.Cells(5, 2) = "JOB Description"
-    resultSheet.Cells(5, 3) = "OLD JOB Number"
-    resultSheet.Cells(5, 4) = "ENTRY Date"
-    resultSheet.Cells(5, 5) = "EMPLOYEE Name"
+    resultSheet.Cells(5, 1) = "NEW JOB NUMBER"
+    resultSheet.Cells(5, 2) = "JOB DESCRIPTION"
+    resultSheet.Cells(5, 3) = "OLD JOB NUMBER"
+    resultSheet.Cells(5, 4) = "ENTRY DATE"
+    resultSheet.Cells(5, 5) = "EMPLOYEE NAME"
     resultSheet.Cells(5, 6) = "NARRATIVE"
     resultSheet.Cells(5, 7) = "HOURS"
-    resultSheet.Cells(5, 8) = "Rate"
+    resultSheet.Cells(5, 8) = "RATE"
     resultSheet.Cells(5, 9) = "GROSS UBS"
     resultSheet.Cells(5, 10) = "ADJ UBS"
     resultSheet.Cells(3, 12) = "ADMIN"
@@ -45,23 +46,18 @@ Sub ReadAndFormatData()
         currentJobNumber = dataSheet.Cells(i, 4).Value
         
         If Right(Trim(currentJobNumber), 5) <> "Total" Then
-            If currentJobNumber <> previousJobNumber Then
-                resultSheet.Rows(currentResultRow).Interior.ColorIndex = 48
-                currentResultRow = currentResultRow + 1
-            End If
-            
             resultSheet.Cells(currentResultRow, 1) = dataSheet.Cells(i, 4) '"NEW JOB Number"
-            resultSheet.Cells(currentResultRow, 2) = dataSheet.Cells(i, 3) '"JOB Description"
+            resultSheet.Cells(currentResultRow, 2) = dataSheet.Cells(i, 6) '"JOB Description"
             resultSheet.Cells(currentResultRow, 3) = dataSheet.Cells(i, 5) '"OLD JOB Number"
-            resultSheet.Cells(currentResultRow, 4) = dataSheet.Cells(i, 7) '"ENTRY Date"
-            If Trim(dataSheet.Cells(i, 8)) = "" Then '"EMPLOYEE Name"
+            resultSheet.Cells(currentResultRow, 4) = dataSheet.Cells(i, 8) '"ENTRY Date"
+            If Trim(dataSheet.Cells(i, 9)) = "" Then '"EMPLOYEE Name"
                 resultSheet.Cells(currentResultRow, 5) = resultSheet.Cells(currentResultRow - 1, 5)
             Else
-                resultSheet.Cells(currentResultRow, 5) = dataSheet.Cells(i, 8)
+                resultSheet.Cells(currentResultRow, 5) = dataSheet.Cells(i, 9)
             End If
-            resultSheet.Cells(currentResultRow, 6) = dataSheet.Cells(i, 9) '"NARRATIVE"
-            resultSheet.Cells(currentResultRow, 7) = dataSheet.Cells(i, 10) '"HOURS"
-            resultSheet.Cells(currentResultRow, 9) = dataSheet.Cells(i, 11) '"GROSS UBS"
+            resultSheet.Cells(currentResultRow, 6) = dataSheet.Cells(i, 12) '"NARRATIVE"
+            resultSheet.Cells(currentResultRow, 7) = dataSheet.Cells(i, 13) '"HOURS"
+            resultSheet.Cells(currentResultRow, 9) = dataSheet.Cells(i, 14) '"GROSS UBS"
             
             resultSheet.Cells(currentResultRow, 8).Formula = "=I" & CStr(currentResultRow) & "/G" & CStr(currentResultRow) '"Rate"
             resultSheet.Cells(currentResultRow, 10).Formula = "=G" & CStr(currentResultRow) & "*H" & CStr(currentResultRow) '"ADJ UBS"
@@ -70,6 +66,30 @@ Sub ReadAndFormatData()
             previousJobNumber = dataSheet.Cells(i, 4).Value
         End If
     Next i
+    
+    'Sort resultSheet data
+    resultSheet.Range("A7:J" & CStr(currentResultRow - 1)).Sort Key1:=resultSheet.Range("A7"), _
+                                                                Order1:=xlAscending, _
+                                                                Key2:=resultSheet.Range("D7"), _
+                                                                Order1:=xlAscending
+                                                                
+    'Add grey row between different job numbers
+    previousJobNumber = resultSheet.Cells(7, 1).Value
+    numberOfGreyRows = 0
+    
+    For i = 7 To currentResultRow - 1
+        currentJobNumber = resultSheet.Cells(i + numberOfGreyRows, 1).Value
+    
+        If currentJobNumber <> previousJobNumber Then
+            resultSheet.Rows(i + numberOfGreyRows).EntireRow.Insert
+            resultSheet.Rows(i + numberOfGreyRows).Interior.ColorIndex = 48
+            numberOfGreyRows = numberOfGreyRows + 1
+        End If
+        
+        previousJobNumber = resultSheet.Cells(i + numberOfGreyRows, 1).Value
+    Next i
+    
+    currentResultRow = currentResultRow + numberOfGreyRows
     
     'Create SUM formulas
     resultSheet.Cells(currentResultRow, 7).Formula = "=SUM(G7:G" & CStr(currentResultRow - 1) & ")"
@@ -151,9 +171,9 @@ Sub ReadAndFormatData()
     
     'Sort employees by rate
     resultSheet.Range("E" & CStr(currentResultRow + 8) & ":M" & CStr(currentResultRow + 9 + UBound(newUniqueNames))).Sort Key1:=resultSheet.Range("H" & CStr(currentResultRow + 8)), _
-                                                                                                                        Order1:=xlDescending, _
-                                                                                                                        Header:=xlYes
-                        
+                                                                                                            Order1:=xlDescending, _
+                                                                                                            Header:=xlYes
+            
     resultSheet.Cells(currentResultRow + 9 + UBound(newUniqueNames), 7).Formula = "=SUM(G" & CStr(currentResultRow + 9 + LBound(newUniqueNames) - 1) & ":G" & CStr(currentResultRow + 9 + UBound(newUniqueNames) - 1) & ")"
     resultSheet.Cells(currentResultRow + 9 + UBound(newUniqueNames), 9).Formula = "=SUM(I" & CStr(currentResultRow + 9 + LBound(newUniqueNames) - 1) & ":I" & CStr(currentResultRow + 9 + UBound(newUniqueNames) - 1) & ")"
     resultSheet.Cells(currentResultRow + 9 + UBound(newUniqueNames), 10).Formula = "=SUM(J" & CStr(currentResultRow + 9 + LBound(newUniqueNames) - 1) & ":J" & CStr(currentResultRow + 9 + UBound(newUniqueNames) - 1) & ")"

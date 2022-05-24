@@ -1,2 +1,2 @@
 # FreelanceProjects
-All freelance projects
+Freelance projects, primarily Excel macros
